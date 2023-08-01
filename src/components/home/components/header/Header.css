@@ -1,0 +1,6 @@
+.fa-copy {
+  cursor: pointer;
+}
+.fa-copy:hover {
+  color: #0d6efd;
+}
