@@ -38,7 +38,7 @@ export default function Header({
 
   const AudioButton = useMemo(() => {
     const iconClass =
-      "fa-solid " + (audio ? "fa-microphone-slash" : "fa-microphone");
+      "fa-solid " + (!audio ? "fa-microphone-slash" : "fa-microphone px-1");
     const onClick = audio ? handleAudioDisable : handleAudioEnable;
     return (
       <button className="me-2 btn" onClick={onClick}>
@@ -48,7 +48,7 @@ export default function Header({
   }, [audio, handleAudioEnable, handleAudioDisable]);
 
   const VideoButton = useMemo(() => {
-    const iconClass = "fa-solid " + (video ? "fa-video-slash" : "fa-video");
+    const iconClass = "fa-solid " + (!video ? "fa-video-slash" : "fa-video");
     const onClick = video ? handleVideoDisable : handleVideoEnable;
     return (
       <button className="me-2 btn" onClick={onClick}>
