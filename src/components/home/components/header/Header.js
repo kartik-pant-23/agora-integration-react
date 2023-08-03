@@ -7,6 +7,8 @@ export default function Header({
   onAudioEnable,
   video,
   onVideoEnable,
+  screenSharing,
+  onScreenSharingEnable,
 }) {
   const [showCopyToClipboardText, setTextVisibility] = useState(false);
 
@@ -25,6 +27,14 @@ export default function Header({
   const handleVideoDisable = useCallback(() => {
     onVideoEnable(false);
   }, [onVideoEnable]);
+
+  const handleScreenSharingEnable = useCallback(() => {
+    onScreenSharingEnable(true);
+  }, [onScreenSharingEnable]);
+
+  const handleScreenSharingDisable = useCallback(() => {
+    onScreenSharingEnable(false);
+  }, [onScreenSharingEnable]);
 
   const handleCopyClick = useCallback(() => {
     // copy to clipboard
@@ -57,8 +67,27 @@ export default function Header({
     );
   }, [video, handleVideoEnable, handleVideoDisable]);
 
+  const ScreenSharingButton = useMemo(() => {
+    const onClick = screenSharing
+      ? handleScreenSharingDisable
+      : handleScreenSharingEnable;
+    return (
+      <button
+        className={`me-2 btn btn-sm ${
+          screenSharing ? "btn-info" : "btn-outline-secondary"
+        }`}
+        onClick={onClick}
+      >
+        {`${screenSharing ? "Stop" : "Start"} Sharing`}
+      </button>
+    );
+  }, [screenSharing, handleScreenSharingDisable, handleScreenSharingEnable]);
+
   return (
-    <header className="d-flex align-items-center justify-content-between py-2 px-5">
+    <header
+      className="d-flex align-items-center justify-content-between py-2 px-5"
+      style={{ flex: "0 1 auto" }}
+    >
       <div className="d-flex g-2 align-items-center">
         <h3 className="m-0">
           Channel - <strong>{channelId}</strong>
@@ -72,6 +101,7 @@ export default function Header({
       </div>
 
       <div>
+        {ScreenSharingButton}
         {AudioButton}
         {VideoButton}
         <button className="btn btn-danger" onClick={onLeaveChannel}>

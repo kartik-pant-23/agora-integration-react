@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import _map from "lodash.map";
 
-import useAgoraClient from "../../hooks/useAgoraClient";
+import { useAgoraClient } from "../../hooks/useAgoraClient";
 import Header from "./components/header";
 import VideoPanel from "./components/videoPanel";
 
@@ -10,59 +10,68 @@ export default function Home({ channelId, onLeaveChannel }) {
     console.log(error);
   }, []);
 
-  const [client, users, tracks] = useAgoraClient({
-    channelId,
-    onFailure: onAgoraFailure,
+  const [users, tracks, audio, video, screenShare, leaveChannel] =
+    useAgoraClient({
+      channelId,
+      onFailure: onAgoraFailure,
+    });
+
+  useEffect(() => {
+    const handleStopScreenSharingFromBrowser = () => {
+      screenShare.setState(false);
+    };
+    window.addEventListener(
+      "screen-sharing-stop",
+      handleStopScreenSharingFromBrowser
+    );
+    return () => {
+      window.removeEventListener(
+        "screen-sharing-stop",
+        handleStopScreenSharingFromBrowser
+      );
+    };
   });
 
-  const [audioState, setAudioState] = useState(true);
-  const handleAudioEnable = useCallback(
-    async (enabled) => {
-      if (tracks) {
-        await tracks[0]?.setEnabled(enabled);
-        setAudioState(enabled);
-      }
-    },
-    [tracks]
-  );
-
-  const [videoState, setVideoState] = useState(true);
-  const handleVideoEnable = useCallback(
-    async (enabled) => {
-      if (tracks) {
-        await tracks[1]?.setEnabled(enabled);
-        setVideoState(enabled);
-      }
-    },
-    [tracks]
-  );
-
   const handleLeaveChannel = useCallback(async () => {
-    await client.leave();
-    client.removeAllListeners();
-    if (tracks) {
-      tracks.forEach((track) => track.close());
-    }
+    await leaveChannel();
     onLeaveChannel();
-  }, [client, tracks, onLeaveChannel]);
+  }, [leaveChannel, onLeaveChannel]);
 
   return (
     <div
-      className="d-flex flex-column bg-light"
+      className="d-flex flex-column"
       style={{ height: "100vh", width: "100vw" }}
     >
       <Header
         channelId={channelId}
-        audio={audioState}
-        video={videoState}
-        onAudioEnable={handleAudioEnable}
-        onVideoEnable={handleVideoEnable}
+        audio={audio.state}
+        video={video.state}
+        screenSharing={screenShare.state}
+        onAudioEnable={audio.setState}
+        onVideoEnable={video.setState}
+        onScreenSharingEnable={screenShare.setState}
         onLeaveChannel={handleLeaveChannel}
       />
-      <div className="row g-0" style={{ flex: 1 }}>
+      <div className="row m-0" style={{ flex: 1 }}>
+        <div className="col-md-9 p-2 d-flex bg-light">
+          <div
+            className="p-2 my-auto d-flex"
+            style={{ height: "75vh", overflow: "auto" }}
+          >
+            {users &&
+              _map(users, (user) => (
+                <VideoPanel videoTrack={user.videoTrack} userId={user.uid} />
+              ))}
+          </div>
+        </div>
+        <div className="col-md-3 p-2">
+          {tracks && <VideoPanel videoTrack={tracks[1]} userId="You" />}
+        </div>
+      </div>
+      {/* <div className="row g-0" style={{ flex: 1 }}>
         <div
           className="col-md-9 p-4 bg-white rounded"
-          style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}
+          style={{ display: "grid", gridTemplateColumns: "repeat(1, 1fr)" }}
         >
           {users &&
             _map(users, (user) => (
@@ -72,7 +81,7 @@ export default function Home({ channelId, onLeaveChannel }) {
         <div className="col-md-3 p-4 bg-light">
           {tracks && <VideoPanel videoTrack={tracks[1]} userId="You" />}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
